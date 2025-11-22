@@ -55,6 +55,7 @@ void transform110_packed_avx(const uint64_t *current_buffer,
                              size_t ghost_offset) {
   // The strategy is to shift the lane left and right, and then XOR it.
   // That is exacly what we do for each group.
+#pragma omp for schedule(static)
   for (size_t group_idx = ghost_offset; group_idx < ghost_offset + groups;
        ++group_idx) {
     __m256i center = LOAD_CENTER(current_buffer, group_idx);
