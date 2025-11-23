@@ -17,6 +17,10 @@ typedef struct packed_buffer {
   size_t ghost_offset = 0; // offtes until actual data
   uint64_t seed_bits = 0;
   uint64_t last_mask = ~0ULL; // mask for last real word
+  uint64_t firstbit_mask = ~1ULL; // Mask for first bit
+  uint64_t lastbit_mask = ~1ULL; // Mask for first bit
+  size_t first_real_word = 0;
+  size_t last_real_word = 0;
 } packed_buffer_t;
 
 // ----------------------------------
@@ -76,32 +80,22 @@ void simulate(uint64_t steps, packed_buffer_t &packed_sol) {
     return;
   }
 
-  uint64_t clear_firstbit = ~1ULL; // Mask for first bit
-  uint64_t last_bit_idx =
-      (packed_sol.seed_bits == 0) ? 0 : (packed_sol.seed_bits - 1);
-  size_t last_word = static_cast<size_t>(last_bit_idx >> 6);
-  uint64_t clear_lastbit = ~(1ULL << last_bit_idx & 63); // Mask for last bit
-
-  // Adjust word index for ghost offset
-  size_t first_real_word = packed_sol.ghost_offset * 4;
-  size_t last_real_word = first_real_word + last_word;
-
   for (uint64_t s = 0; s < steps; ++s) {
     transform110_packed_avx(packed_sol.current_buffer, packed_sol.next_buffer,
                             packed_sol.groups, packed_sol.ghost_offset);
     // Clear boundary bits (only on real data)
-    packed_sol.next_buffer[last_real_word] &= clear_lastbit;
-    packed_sol.next_buffer[first_real_word] &= clear_firstbit;
+    packed_sol.next_buffer[packed_sol.first_real_word] &= packed_sol.firstbit_mask;
+    packed_sol.next_buffer[packed_sol.last_real_word] &= packed_sol.lastbit_mask;
     std::swap(packed_sol.current_buffer, packed_sol.next_buffer);
   }
 
   // Clear excess calculations
-  packed_sol.next_buffer[last_real_word] &= packed_sol.last_mask;
+  packed_sol.next_buffer[packed_sol.last_real_word] &= packed_sol.last_mask;
 
   uint64_t one_count = 0;
 #pragma omp parallel for reduction(+ : one_count)
   for (size_t i = 0; i < packed_sol.real_words; ++i) {
-    one_count += std::popcount(packed_sol.current_buffer[first_real_word + i]);
+    one_count += std::popcount(packed_sol.current_buffer[packed_sol.first_real_word + i]);
   }
 
   std::cout << one_count;
@@ -122,9 +116,19 @@ static bool read_bits_from_file_packed(const char *filename,
   uint64_t bits_in_last_pack = out.seed_bits & 63; // Faster % 64
   out.last_mask = ((1ULL << bits_in_last_pack) - 1) | -(bits_in_last_pack == 0);
 
+  // Compute masks for first and last bit
+  uint64_t last_bit_idx =
+      (out.seed_bits == 0) ? 0 : (out.seed_bits - 1);
+  out.lastbit_mask = ~(1ULL << last_bit_idx & 63); // Mask for last bit
+
   // Add 2 ghost groups (1 on each side) = 8 extra words
   out.ghost_offset = 2;                     // 2 groups padding before data
   out.padded_words = (out.groups + 4) << 2; // +4 groups (2 on each side)
+
+  // Adjust word index for ghost offset
+  out.first_real_word = out.ghost_offset * 4;
+  size_t last_word = static_cast<size_t>(last_bit_idx >> 6);
+  out.last_real_word = out.first_real_word + last_word;
 
   // Allocate aligned and zero-initialize
   out.current_buffer = new (std::align_val_t(32)) uint64_t[out.padded_words]();
