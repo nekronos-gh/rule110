@@ -90,11 +90,13 @@ void simulate(uint64_t steps, packed_buffer_t &packed_sol) {
     transform110_packed_avx(packed_sol.current_buffer, packed_sol.next_buffer,
                             packed_sol.groups, packed_sol.ghost_offset);
     // Clear boundary bits (only on real data)
-    packed_sol.next_buffer[last_real_word] &=
-        packed_sol.last_mask & clear_lastbit;
+    packed_sol.next_buffer[last_real_word] &= clear_lastbit;
     packed_sol.next_buffer[first_real_word] &= clear_firstbit;
     std::swap(packed_sol.current_buffer, packed_sol.next_buffer);
   }
+
+  // Clear excess calculations
+  packed_sol.next_buffer[last_real_word] &= packed_sol.last_mask;
 
   uint64_t one_count = 0;
 #pragma omp parallel for reduction(+ : one_count)
