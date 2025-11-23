@@ -6,6 +6,8 @@ A high-performance implementation of Rule 110 cellular automaton using AVX2 SIMD
 
 This project implements an optimized Rule 110 simulator that leverages Intel AVX2 intrinsics to achieve significant performance improvements over traditional lookup-table approaches. The implementation focuses on minimizing operations through Boolean algebra simplification and efficient bit-level parallelism.
 
+[Video Explanation](https://youtu.be/CbsLsx1AKcs?si=-kGaAxW40ml2VPKn)
+
 ## Performance Characteristics
 
 - **Memory Access**: Aligned 256-bit loads/stores for optimal cache performance
