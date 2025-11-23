@@ -26,11 +26,6 @@ typedef struct packed_buffer {
 // ----------------------------------
 // Lane 0 | Lane 1 | Lane 2 | Lane 3
 // ----------------------------------
-#define LANE0_MASK _mm256_setr_epi64x(-1LL, 0, 0, 0)
-#define LANE3_MASK _mm256_setr_epi64x(0, 0, 0, -1LL)
-#define NOT_LANE0 _mm256_setr_epi64x(0, -1LL, -1LL, -1LL)
-#define NOT_LANE3 _mm256_setr_epi64x(-1LL, -1LL, -1LL, 0)
-
 #define LOAD_CENTER(buf, group_idx)                                            \
   _mm256_load_si256((__m256i *)(&(buf)[(group_idx) * 4]))
 #define STORE_CENTER(buf, group_idx, v)                                        \
