@@ -14,7 +14,7 @@ typedef struct packed_buffer {
   size_t real_words = 0;   // number of uint64_t
   size_t groups = 0;       // number of __m256i groups (4 words each)
   size_t padded_words = 0; // groups * 4
-  size_t ghost_offset = 0; // offtes until actual data
+  size_t ghost_offset = 0; // offset until actual data
   uint64_t seed_bits = 0;
   uint64_t last_mask = ~0ULL; // mask for last real word
   uint64_t firstbit_mask = ~1ULL; // Mask for first bit
