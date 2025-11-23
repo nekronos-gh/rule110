@@ -18,7 +18,7 @@ typedef struct packed_buffer {
   uint64_t seed_bits = 0;
   uint64_t last_mask = ~0ULL; // mask for last real word
   uint64_t firstbit_mask = ~1ULL; // Mask for first bit
-  uint64_t lastbit_mask = ~1ULL; // Mask for first bit
+  uint64_t lastbit_mask = 0ULL; // Mask for last bit
   size_t first_real_word = 0;
   size_t last_real_word = 0;
 } packed_buffer_t;
